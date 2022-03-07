@@ -33,8 +33,9 @@ class GStyle(object):
             font-family: monospace;
             }
         ._HelpLabel {
-            font-family: serif;
-            font-size: 14px;
+            font-family: monospace;
+            font-size: 18px;
+            font: bold;
             }
         ._InputComboBox{
             font-size: 16px;
@@ -63,18 +64,18 @@ class GStyle(object):
     def __init__(self, style=""):
         if not GStyle.check_style(style):
             self.text_color = "black"
-            self.placehoder_color = "#898b8d"
+            self.placeholder_color = "#898b8d"
             self.stylesheet = (
                 GStyle._base_style
                 + """
                     ._Spliter{
-                        border: 1px inset gray;
+                        border: 1px solid gray;
                         }
                     """
             )
         elif style == "qdarkstyle":
             self.text_color = "#eff0f1"
-            self.placehoder_color = "#898b8d"
+            self.placeholder_color = "#898b8d"
             self.stylesheet = (
                 qdarkstyle.load_stylesheet_pyqt5()
                 + GStyle._base_style
@@ -148,7 +149,7 @@ class GItemModel(QtGui.QStandardItemModel):
         if val is None or val == "":
             self.setData(
                 index,
-                QtGui.QBrush(QtGui.QColor(_gstyle.placehoder_color)),
+                QtGui.QBrush(QtGui.QColor(_gstyle.placeholder_color)),
                 role=QtCore.Qt.ForegroundRole,
             )
         else:
@@ -202,7 +203,7 @@ class GEditDelegate(QtWidgets.QStyledItemDelegate):
         if data_str == "" or data_str is None:
             model.setData(
                 index,
-                QtGui.QBrush(QtGui.QColor(_gstyle.placehoder_color)),
+                QtGui.QBrush(QtGui.QColor(_gstyle.placeholder_color)),
                 role=QtCore.Qt.ForegroundRole,
             )
         else:
@@ -217,6 +218,7 @@ class GEditDelegate(QtWidgets.QStyledItemDelegate):
 def generate_label(opt):
     show_name = getattr(opt, "show_name", _missing)
     show_name = opt.name if show_name is _missing else show_name
+    show_name = show_name.replace("_", " ").capitalize()
     param = _OptionLabel(show_name)
     param.setToolTip(getattr(opt, "help", None))
     return param
@@ -828,7 +830,9 @@ class App(QtWidgets.QWidget):
         left=10,
         top=10,
         width=400,
-        height=140,
+        height=160,
+        title=None,
+        help=None,
     ):
         """
         Parameters
@@ -839,8 +843,10 @@ class App(QtWidgets.QWidget):
         """
         super().__init__()
         self.new_thread = new_thread
-        self.title = func.name
+        self.title = func.name if title == None else title
         self.func = func
+        if help:
+            self.func.help = help
         self.initUI(run_exit, QtCore.QRect(left, top, width, height))
         self.threadpool = QtCore.QThreadPool()
         self.outputEdit = self.initOutput(output)
@@ -922,7 +928,7 @@ class App(QtWidgets.QWidget):
             runcmd.run()
 
 
-def gui_it(click_func, style="qdarkstyle", **kargs) -> None:
+def gui_it(click_func, style="qdarkstyle", **kwargs) -> None:
     """
     Parameters
     ----------
@@ -935,10 +941,12 @@ def gui_it(click_func, style="qdarkstyle", **kargs) -> None:
     app.setStyleSheet(_gstyle.stylesheet)
 
     # set the default value for argvs
-    kargs["run_exit"] = kargs.get("run_exit", False)
-    kargs["new_thread"] = kargs.get("new_thread", False)
+    kwargs["run_exit"] = kwargs.get("run_exit", False)
+    kwargs["new_thread"] = kwargs.get("new_thread", False)
+    kwargs["title"] = kwargs.get("title", None)
+    kwargs["help"] = kwargs.get("help", None)
 
-    ex = App(click_func, **kargs)
+    App(click_func, **kwargs)
     sys.exit(app.exec_())
 
 
