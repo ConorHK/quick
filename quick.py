@@ -469,6 +469,7 @@ def count_option(opt):
 
 class GTupleGListView(click.Tuple):
     def to_widget(self, opt):
+        print(opt)
         view = GListView(opt)
 
         def to_command():
@@ -698,6 +699,8 @@ class CommandLayout(QtWidgets.QGridLayout):
         params_func = []
         widgets = []
         for i, para in enumerate(opts, self.rowCount()):
+            if para.name == "version":
+               continue 
             widget, value_func = _to_widget(para)
             widgets.append(widget)
             params_func.append(value_func)
